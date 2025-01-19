@@ -1,14 +1,14 @@
-// Update App.js with routing
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { CartProvider } from './context/CartContext';
+import { Provider } from 'react-redux';
+import { store } from './redux/store';
 import Navbar from './components/Navbar';
 import HomePage from './components/HomePage';
 import PaymentPage from './components/PaymentPage';
 
 const App = () => {
   return (
-    <CartProvider>
+    <Provider store={store}>
       <Router>
         <div>
           <Navbar />
@@ -18,7 +18,7 @@ const App = () => {
           </Routes>
         </div>
       </Router>
-    </CartProvider>
+    </Provider>
   );
 };
 
