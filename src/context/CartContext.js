@@ -4,6 +4,12 @@ const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
+  const [paymentInfo, setPaymentInfo] = useState({
+    cardNumber: '',
+    cardHolder: '',
+    expiryDate: '',
+    cvv: ''
+  });
 
   const addToCart = (shoe) => {
     const existingItem = cart.find((item) => item.id === shoe.id);
@@ -49,15 +55,38 @@ export const CartProvider = ({ children }) => {
     0
   );
 
+  const updatePaymentInfo = (info) => {
+    setPaymentInfo({ ...paymentInfo, ...info });
+  };
+
+  const processPayment = () => {
+    // In a real application, this would connect to a payment gateway
+    console.log('Processing payment...', { paymentInfo, totalCost });
+    // Clear cart after successful payment
+    setCart([]);
+    setPaymentInfo({
+      cardNumber: '',
+      cardHolder: '',
+      expiryDate: '',
+      cvv: ''
+    });
+    return true;
+  };
+
   return (
-    <CartContext.Provider value={{ 
-      cart, 
-      addToCart, 
-      removeFromCart, 
-      increaseQuantity, 
-      decreaseQuantity, 
-      totalCost 
-    }}>
+    <CartContext.Provider
+      value={{
+        cart,
+        addToCart,
+        removeFromCart,
+        increaseQuantity,
+        decreaseQuantity,
+        totalCost,
+        paymentInfo,
+        updatePaymentInfo,
+        processPayment
+      }}
+    >
       {children}
     </CartContext.Provider>
   );

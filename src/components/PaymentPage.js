@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useCart } from '../context/CartContext';
 import styled from 'styled-components';
 
 const PageContainer = styled.div`
@@ -49,150 +49,162 @@ const Input = styled.input`
 `;
 
 const Button = styled.button`
-  background-color: ${props => props.primary ? '#4CAF50' : '#666'};
+  width: 100%;
+  padding: 15px;
+  background-color: #4CAF50;
   color: white;
-  padding: 12px 24px;
   border: none;
   border-radius: 5px;
-  cursor: pointer;
   font-size: 16px;
-  margin: 10px;
-  transition: opacity 0.2s;
-  width: ${props => props.fullWidth ? '100%' : 'auto'};
+  cursor: pointer;
+  margin-top: 20px;
 
   &:hover {
-    opacity: 0.9;
+    background-color: #45a049;
+  }
+
+  &:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
   }
 `;
 
 const CartItem = styled.div`
   display: flex;
-  align-items: center;
-  padding: 15px;
+  gap: 20px;
+  padding: 15px 0;
   border-bottom: 1px solid #eee;
-  gap: 15px;
-`;
 
-const CartItemImage = styled.img`
-  width: 80px;
-  height: 80px;
-  object-fit: cover;
-  border-radius: 8px;
-`;
+  img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 8px;
+  }
 
-const CartItemDetails = styled.div`
-  flex: 1;
-`;
-
-const TotalAmount = styled.div`
-  font-size: 1.2em;
-  font-weight: bold;
-  text-align: right;
-  padding: 20px;
-  border-top: 2px solid #eee;
-  margin-top: 20px;
+  .details {
+    flex: 1;
+  }
 `;
 
 const PaymentPage = () => {
   const navigate = useNavigate();
-  const { items, totalAmount } = useSelector(state => state.cart);
-  const [paymentDetails, setPaymentDetails] = useState({
-    cardNumber: '',
-    cardHolder: '',
-    expiryDate: '',
-    cvv: ''
-  });
+  const { cart, totalCost, paymentInfo, updatePaymentInfo, processPayment } = useCart();
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    updatePaymentInfo({ [name]: value });
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert('Payment Successful!');
-    navigate('/');
+    setIsProcessing(true);
+    
+    try {
+      const success = processPayment();
+      if (success) {
+        alert('Payment successful!');
+        navigate('/');
+      }
+    } catch (error) {
+      alert('Payment failed. Please try again.');
+    } finally {
+      setIsProcessing(false);
+    }
   };
+
+  if (cart.length === 0) {
+    return (
+      <PageContainer>
+        <h2>Your cart is empty</h2>
+        <Button onClick={() => navigate('/')}>Return to Shopping</Button>
+      </PageContainer>
+    );
+  }
 
   return (
     <PageContainer>
       <FlexContainer>
-        {/* Payment Details Section */}
         <PaymentCard>
           <h2>Payment Details</h2>
           <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: '20px' }}>
+            <div>
               <label>Card Number</label>
               <Input
                 type="text"
+                name="cardNumber"
                 placeholder="1234 5678 9012 3456"
-                value={paymentDetails.cardNumber}
-                onChange={(e) => setPaymentDetails({...paymentDetails, cardNumber: e.target.value})}
-                maxLength="16"
+                value={paymentInfo.cardNumber}
+                onChange={handleInputChange}
+                maxLength="19"
+                required
               />
             </div>
-            
-            <div style={{ marginBottom: '20px' }}>
+            <div>
               <label>Card Holder Name</label>
               <Input
                 type="text"
+                name="cardHolder"
                 placeholder="John Doe"
-                value={paymentDetails.cardHolder}
-                onChange={(e) => setPaymentDetails({...paymentDetails, cardHolder: e.target.value})}
+                value={paymentInfo.cardHolder}
+                onChange={handleInputChange}
+                required
               />
             </div>
-            
-            <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', gap: '20px' }}>
               <div style={{ flex: 1 }}>
                 <label>Expiry Date</label>
                 <Input
                   type="text"
+                  name="expiryDate"
                   placeholder="MM/YY"
-                  value={paymentDetails.expiryDate}
-                  onChange={(e) => setPaymentDetails({...paymentDetails, expiryDate: e.target.value})}
+                  value={paymentInfo.expiryDate}
+                  onChange={handleInputChange}
                   maxLength="5"
+                  required
                 />
               </div>
               <div style={{ flex: 1 }}>
                 <label>CVV</label>
                 <Input
                   type="password"
+                  name="cvv"
                   placeholder="123"
+                  value={paymentInfo.cvv}
+                  onChange={handleInputChange}
                   maxLength="3"
-                  value={paymentDetails.cvv}
-                  onChange={(e) => setPaymentDetails({...paymentDetails, cvv: e.target.value})}
+                  required
                 />
               </div>
             </div>
-
-            <Button primary fullWidth type="submit">
-              Pay ₹{totalAmount}
+            <Button type="submit" disabled={isProcessing}>
+              {isProcessing ? 'Processing...' : `Pay $${totalCost.toFixed(2)}`}
             </Button>
           </form>
+          <Button 
+            onClick={() => navigate('/')} 
+            style={{ backgroundColor: '#666' }}
+          >
+            Return to Shopping
+          </Button>
         </PaymentCard>
 
-        {/* Cart Summary Section */}
         <CartSummaryCard>
           <h2>Order Summary</h2>
-          {items.map(item => (
+          {cart.map((item) => (
             <CartItem key={item.id}>
-              <CartItemImage src={item.image} alt={item.name} />
-              <CartItemDetails>
+              <img src={item.image} alt={item.name} />
+              <div className="details">
                 <h3>{item.name}</h3>
                 <p>Quantity: {item.quantity}</p>
-                <p style={{ color: '#4CAF50', fontWeight: 'bold' }}>
-                  ₹{item.price * item.quantity}
-                </p>
-              </CartItemDetails>
+                <p>Price: ${(item.price * item.quantity).toFixed(2)}</p>
+              </div>
             </CartItem>
           ))}
-          
-          <TotalAmount>
-            Total Amount: ₹{totalAmount}
-          </TotalAmount>
-
-          <Button 
-            onClick={() => navigate('/')}
-            fullWidth
-            style={{ backgroundColor: '#007bff' }}
-          >
-            Back to Shopping
-          </Button>
+          <div style={{ marginTop: '20px', borderTop: '2px solid #eee', paddingTop: '20px' }}>
+            <h3>Total: ${totalCost.toFixed(2)}</h3>
+          </div>
         </CartSummaryCard>
       </FlexContainer>
     </PageContainer>

@@ -1,8 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
+import { useCart } from '../context/CartContext';
 import styled from 'styled-components';
-import { addToCart, increaseQuantity, decreaseQuantity } from '../redux/cartSlice';
 
 const Container = styled.div`
   display: flex;
@@ -54,14 +53,14 @@ const Button = styled.button`
   }
 `;
 
-const CartContainer = styled.div`
+const CartSection = styled.div`
   flex: 1;
-  margin-left: 20px;
   background: white;
   padding: 20px;
   border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-left: 20px;
   height: fit-content;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   position: sticky;
   top: 20px;
 `;
@@ -69,22 +68,40 @@ const CartContainer = styled.div`
 const CartItem = styled.div`
   display: flex;
   align-items: center;
-  padding: 10px;
+  padding: 10px 0;
   border-bottom: 1px solid #eee;
+
+  img {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 5px;
+    margin-right: 10px;
+  }
 `;
 
-const CartItemImage = styled.img`
-  width: 50px;
-  height: 50px;
-  object-fit: cover;
-  border-radius: 5px;
-  margin-right: 10px;
+const QuantityControl = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+
+  button {
+    background: #eee;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+
+    &:hover {
+      background: #ddd;
+    }
+  }
 `;
 
 const HomePage = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const { items, totalAmount } = useSelector(state => state.cart);
+  const { cart, addToCart, increaseQuantity, decreaseQuantity, totalCost } = useCart();
 
   const shoes = [
     {
@@ -140,47 +157,47 @@ const HomePage = () => {
   return (
     <Container>
       <ProductGrid>
-        {shoes.map((shoe) => (
+        {shoes.map(shoe => (
           <ProductCard key={shoe.id}>
             <ProductImage src={shoe.image} alt={shoe.name} />
             <h3>{shoe.name}</h3>
             <p style={{ color: '#4CAF50', fontWeight: 'bold' }}>₹{shoe.price}</p>
-            <Button primary onClick={() => dispatch(addToCart(shoe))}>
+            <Button primary onClick={() => addToCart(shoe)}>
               Add to Cart
             </Button>
           </ProductCard>
         ))}
       </ProductGrid>
 
-      <CartContainer>
+      <CartSection>
         <h2>Shopping Cart</h2>
-        {items.length === 0 ? (
-          <p>Your cart is empty.</p>
+        {cart.length === 0 ? (
+          <p>Your cart is empty</p>
         ) : (
           <>
-            {items.map((item) => (
+            {cart.map(item => (
               <CartItem key={item.id}>
-                <CartItemImage src={item.image} alt={item.name} />
-                <div style={{ flex: 1 }}>
+                <img src={item.image} alt={item.name} />
+                <div>
                   <h4>{item.name}</h4>
                   <p>₹{item.price} x {item.quantity}</p>
                 </div>
-                <div>
-                  <Button onClick={() => dispatch(decreaseQuantity(item.id))}>-</Button>
-                  <span style={{ margin: '0 10px' }}>{item.quantity}</span>
-                  <Button onClick={() => dispatch(increaseQuantity(item.id))}>+</Button>
-                </div>
+                <QuantityControl>
+                  <button onClick={() => decreaseQuantity(item.id)}>-</button>
+                  <span>{item.quantity}</span>
+                  <button onClick={() => increaseQuantity(item.id)}>+</button>
+                </QuantityControl>
               </CartItem>
             ))}
             <div style={{ marginTop: '20px', textAlign: 'center' }}>
-              <h3>Total: ₹{totalAmount}</h3>
+              <h3>Total: ₹{totalCost.toFixed(2)}</h3>
               <Button primary onClick={() => navigate('/payment')}>
                 Proceed to Payment
               </Button>
             </div>
           </>
         )}
-      </CartContainer>
+      </CartSection>
     </Container>
   );
 };

@@ -1,14 +1,13 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Provider } from 'react-redux';
-import { store } from './redux/store';
+import { CartProvider } from './context/CartContext';
 import Navbar from './components/Navbar';
 import HomePage from './components/HomePage';
 import PaymentPage from './components/PaymentPage';
 
 const App = () => {
   return (
-    <Provider store={store}>
+    <CartProvider>
       <Router>
         <div>
           <Navbar />
@@ -18,7 +17,7 @@ const App = () => {
           </Routes>
         </div>
       </Router>
-    </Provider>
+    </CartProvider>
   );
 };
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useCart } from '../context/CartContext';
 import styled from 'styled-components';
 
 const Nav = styled.nav`
@@ -31,8 +31,8 @@ const CartInfo = styled.div`
 `;
 
 const Navbar = () => {
-  const { items, totalAmount } = useSelector(state => state.cart);
-  const totalItems = items.reduce((total, item) => total + item.quantity, 0);
+  const { cart, totalCost } = useCart();
+  const totalItems = cart.reduce((total, item) => total + item.quantity, 0);
 
   return (
     <Nav>
@@ -40,7 +40,7 @@ const Navbar = () => {
         <Logo to="/">Shoe Store</Logo>
         <CartInfo>
           <span>Items: {totalItems}</span>
-          <span>Total: ₹{totalAmount}</span>
+          <span>Total: ${totalCost.toFixed(2)}</span>
         </CartInfo>
       </NavContainer>
     </Nav>
